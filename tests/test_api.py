@@ -1,24 +1,26 @@
 # tests/test_api.py
-import pickle
-import pandas as pd
+import json
 from fastapi.testclient import TestClient
-from main import app, FEATURE_NAMES
+from src.main import app
 
 client = TestClient(app)
+
+def load_sample(name):
+    with open(f"tests/{name}.json") as f:
+        return json.load(f)
 
 def test_health():
     r = client.get("/")
     assert r.status_code == 200
-    assert "Fraud Detection API" in r.json().get("message", "")
 
-def test_predict_dummy():
-    # load model to get feature names and sample values
-    with open("fraud_model.pkl", "rb") as f:
-        payload = pickle.load(f)
-    fnames = payload["feature_names"]
-    # build a dummy input: zeros or mean
-    sample = {k: 0.0 for k in fnames}
-    # send request
-    r = client.post("/predict", json=sample)
+def test_predict_normal():
+    payload = load_sample("sample_normal")
+    r = client.post("/predict", json=payload)
+    assert r.status_code == 200
+    assert "prediction" in r.json()
+
+def test_predict_fraud():
+    payload = load_sample("sample_fraud")
+    r = client.post("/predict", json=payload)
     assert r.status_code == 200
     assert "prediction" in r.json()
