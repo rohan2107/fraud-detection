@@ -4,6 +4,7 @@ import pathlib
 import logging
 from typing import Optional
 from contextlib import asynccontextmanager
+import os
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -15,7 +16,7 @@ handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
 LOG.addHandler(handler)
 
-MODEL_PATH = pathlib.Path("fraud_model.pkl")
+MODEL_PATH = pathlib.Path(os.getenv("FRAUD_MODEL_PATH", "fraud_model.pkl"))
 
 # global model objects (populated during lifespan startup)
 scaler = None
@@ -89,8 +90,11 @@ class Transaction(BaseModel):
 
 @app.get("/")
 def home():
-    return {"message": "Fraud Detection API is running!"}
-
+    return {
+        "message": "Fraud Detection API is running!",
+        "model_loaded": model is not None,
+        "model_meta_available": bool(MODEL_META)
+    }
 
 @app.get("/metrics")
 def metrics():
