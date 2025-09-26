@@ -1,7 +1,22 @@
+# Byte-compiled / caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
 .venv/
+venv/
+
+# IDEs
+.vscode/
 .idea/
+
+# Data & models
 *.pkl
-models/
-/.vscode
-/src/__pycache__
-/tests/__pycache__
+*.joblib
+*.csv
+
+# OS
+.DS_Store
+Thumbs.db
