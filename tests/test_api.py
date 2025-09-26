@@ -1,12 +1,15 @@
 # tests/test_api.py
 import json
+from pathlib import Path
 from fastapi.testclient import TestClient
 from src.main import app
 
 client = TestClient(app)
 
-def load_sample(name):
-    with open(f"tests/{name}.json") as f:
+BASE_DIR = Path(__file__).parent / "samples"
+
+def load_sample(name: str):
+    with open(BASE_DIR / f"{name}.json") as f:
         return json.load(f)
 
 def test_health():
