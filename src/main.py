@@ -1,23 +1,54 @@
-# main.py
+# src/main.py
 import pickle
+import pathlib
+import logging
+from typing import Optional
+from contextlib import asynccontextmanager
+
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, ConfigDict
 
-app = FastAPI(title="Fraud Detection API")
+LOG = logging.getLogger("fraud-api")
+LOG.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+LOG.addHandler(handler)
 
-# Load model & scaler
-try:
-    with open("fraud_model.pkl", "rb") as f:
-        payload = pickle.load(f)
-        scaler = payload["scaler"]
-        model = payload["model"]
-        FEATURE_NAMES = payload["feature_names"]
-        MODEL_META = payload.get("meta", {})
-except FileNotFoundError:
-    raise RuntimeError("fraud_model.pkl not found in working dir")
-except Exception as e:
-    raise RuntimeError(f"Failed to load model pickle: {e}")
+MODEL_PATH = pathlib.Path("fraud_model.pkl")
+
+# global model objects (populated during lifespan startup)
+scaler = None
+model = None
+FEATURE_NAMES: Optional[list] = None
+MODEL_META: dict = {}
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager — runs at startup and shutdown.
+    Loads model if available; does not crash the app if missing.
+    """
+    global scaler, model, FEATURE_NAMES, MODEL_META
+    try:
+        if MODEL_PATH.exists():
+            LOG.info(f"Loading model from {MODEL_PATH}")
+            with MODEL_PATH.open("rb") as f:
+                payload = pickle.load(f)
+            scaler = payload.get("scaler")
+            model = payload.get("model")
+            FEATURE_NAMES = payload.get("feature_names")
+            MODEL_META = payload.get("meta", {})
+            LOG.info("Model loaded successfully.")
+        else:
+            LOG.warning(f"{MODEL_PATH} not found — API will start without a model. Add the pickle to enable /predict.")
+    except Exception as exc:  # keep startup resilient but log error
+        LOG.exception("Failed to load model at startup: %s", exc)
+    yield
+    # optional: any shutdown cleanup here
+    LOG.info("Shutting down app.")
+
+app = FastAPI(title="Fraud Detection API", lifespan=lifespan)
 
 # --- Pydantic model using CSV-style names as aliases ---
 class Transaction(BaseModel):
@@ -52,15 +83,36 @@ class Transaction(BaseModel):
     V28: float = Field(..., alias="V28")
     Amount: float = Field(..., alias="Amount")
 
+    # Pydantic v2 config
     model_config = ConfigDict(validate_by_name=True, extra="forbid")
+
 
 @app.get("/")
 def home():
     return {"message": "Fraud Detection API is running!"}
 
+
+@app.get("/metrics")
+def metrics():
+    """Return model metadata (metrics) if available."""
+    if not MODEL_META:
+        raise HTTPException(status_code=404, detail="Model metadata not available.")
+    return {"model_meta": MODEL_META}
+
+
 @app.post("/predict")
 def predict(transaction: Transaction):
-    # Use alias keys (CSV-style) so data dict contains "Time","V1",...,"Amount"
+    """
+    Predict whether a single transaction is fraudulent.
+    Returns 503 if model not loaded.
+    """
+    if model is None or scaler is None or FEATURE_NAMES is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Model not loaded. Please ensure fraud_model.pkl exists in the working directory.",
+        )
+
+    # Use CSV-style alias keys (Time, V1..V28, Amount)
     data = transaction.model_dump(by_alias=True)
 
     # Ensure all features expected by the trained model are present
@@ -87,5 +139,5 @@ def predict(transaction: Transaction):
     return {
         "prediction": "Fraud" if is_fraud else "Not Fraud",
         "raw_prediction": int(prediction[0]),
-        "model_meta": MODEL_META
+        "model_meta": MODEL_META,
     }

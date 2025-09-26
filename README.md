@@ -26,7 +26,7 @@ and place creditcard.csv inside the data/ folder.
 
 # Run API
 ```bash
-uvicorn main:app --reload --port 8000
+uvicorn src.main:app --reload --port 8000
 ```
 
 ## Usage
