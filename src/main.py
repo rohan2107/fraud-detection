@@ -2,7 +2,7 @@
 import pickle
 import pandas as pd
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 app = FastAPI(title="Fraud Detection API")
 
@@ -52,9 +52,7 @@ class Transaction(BaseModel):
     V28: float = Field(..., alias="V28")
     Amount: float = Field(..., alias="Amount")
 
-    class Config:
-        allow_population_by_field_name = True
-        extra = "forbid"
+    model_config = ConfigDict(validate_by_name=True, extra="forbid")
 
 @app.get("/")
 def home():
@@ -63,7 +61,7 @@ def home():
 @app.post("/predict")
 def predict(transaction: Transaction):
     # Use alias keys (CSV-style) so data dict contains "Time","V1",...,"Amount"
-    data = transaction.dict(by_alias=True)
+    data = transaction.model_dump(by_alias=True)
 
     # Ensure all features expected by the trained model are present
     missing = [c for c in FEATURE_NAMES if c not in data]
