@@ -72,3 +72,27 @@ Run automated tests with pytest:
 ```bash
 pytest -q
 ```
+
+## Development
+
+Quick commands to validate the project locally (PowerShell):
+
+```powershell
+# activate the virtualenv (from repository root)
+& .\.venv\Scripts\Activate.ps1
+
+# install dev dependencies (if not already installed)
+python -m pip install -r requirements-dev.txt
+
+# run formatter (will modify files)
+black .
+
+# run linting checks
+ruff check .
+
+# run tests
+python -m pytest -q
+
+# run training to produce `fraud_model.pkl` (requires `data/creditcard.csv`)
+python -m src.train_model
+```
