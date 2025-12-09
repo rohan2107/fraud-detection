@@ -1,6 +1,7 @@
 import importlib
-m = importlib.import_module('sklearn.preprocessing._data')
-print('module loaded', m)
+
+m = importlib.import_module("sklearn.preprocessing._data")
+print("module loaded", m)
 """Removed: debugging helper script.
 
 This file was used to check sklearn internals during development and

@@ -33,6 +33,19 @@ The model is trained on the publicly available "Credit Card Fraud Detection" dat
 - The model is unsupervised and requires careful thresholding and human review before action.
 - Beware of using pickle files from untrusted sources — they may execute code if loaded.
 
+## Model artifact safety
+
+Model artifact files (pickles, joblib dumps) can execute arbitrary code during
+deserialization if they are created by an attacker or come from an untrusted
+source. For safety:
+
+- Prefer artifacts published by your CI/CD with checksums or signatures.
+- Consider storing models in an artifact registry with immutability and access
+	controls.
+- Use safer interchange formats for production where possible (ONNX, TF
+	SavedModel).
+
+
 ## Next steps / improvements
 - Use a supervised model or a hybrid approach with labeled fraud examples for better precision/recall.
 - Add monitoring for model drift, acceptance tests, and retraining pipelines.

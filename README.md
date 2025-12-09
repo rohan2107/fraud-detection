@@ -49,6 +49,20 @@ docker run --rm -p 8000:8000 --env-file env.example fraud-api
 ```
 The container expects `fraud_model.pkl` to exist at the repo root when building (or mount one at runtime with `-v $(pwd)/fraud_model.pkl:/app/fraud_model.pkl`).
 
+## Model artifact safety
+
+Be careful when loading serialized model artifacts (pickle / joblib files). These
+files may execute arbitrary code when deserialized if they come from an
+untrusted source. For local development this repository provides test fixtures
+and a helper that attempts `joblib` loading first and falls back to `pickle`.
+
+Recommendations:
+- Verify artifacts using a checksum (e.g. SHA256) or a signed release before
+  loading in production.
+- Only load artifacts from trusted sources or CI-published build artifacts.
+- In production, prefer model formats with safer runtimes (ONNX, TF SavedModel,
+  etc.) or use isolated environments for deserialization.
+
 ## Usage
 Example request (using included sample JSONs):
 
@@ -71,28 +85,4 @@ curl.exe -X POST "http://127.0.0.1:8000/predict" ^
 Run automated tests with pytest:
 ```bash
 pytest -q
-```
-
-## Development
-
-Quick commands to validate the project locally (PowerShell):
-
-```powershell
-# activate the virtualenv (from repository root)
-& .\.venv\Scripts\Activate.ps1
-
-# install dev dependencies (if not already installed)
-python -m pip install -r requirements-dev.txt
-
-# run formatter (will modify files)
-black .
-
-# run linting checks
-ruff check .
-
-# run tests
-python -m pytest -q
-
-# run training to produce `fraud_model.pkl` (requires `data/creditcard.csv`)
-python -m src.train_model
 ```

@@ -1,6 +1,6 @@
 # tests/test_train_output.py
 import subprocess
-import pickle
+import joblib
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -40,8 +40,7 @@ def test_train_creates_pickle_and_contents():
 
         assert PKL_PATH.exists(), "fraud_model.pkl should be created by train_model.py"
 
-        with PKL_PATH.open("rb") as f:
-            payload = pickle.load(f)
+        payload = joblib.load(PKL_PATH)
 
         # payload could be either a tuple (scaler, model) or dict depending on your train_model implementation.
         # Support both patterns for compatibility:

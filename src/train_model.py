@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 import logging
 
-import pickle
+
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import f1_score, precision_score, recall_score
@@ -21,6 +21,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.config import settings  # noqa: E402
+from src.model_io import save_model  # noqa: E402 (import after adjusting sys.path)
 
 
 def main() -> None:
@@ -66,15 +67,14 @@ def main() -> None:
 
     meta = {"precision": float(precision), "recall": float(recall), "f1": float(f1)}
 
-    # Save everything using pickle so tests using `pickle.load` can read it
+    # Save everything using our model_io helper (joblib under the hood)
     payload = {
         "scaler": scaler,
         "model": model,
         "feature_names": feature_names,
         "meta": meta,
     }
-    with open(Path(settings.model_path), "wb") as fh:
-        pickle.dump(payload, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    save_model(Path(settings.model_path), payload)
 
     logging.info("Model trained and saved to %s", Path(settings.model_path))
     logging.info("Eval metrics: %s", meta)

@@ -1,6 +1,5 @@
 # src/main.py
 import logging
-import pickle
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -9,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from .config import settings
+from .model_io import load_model
 
 LOG = logging.getLogger("fraud-api")
 LOG.setLevel(settings.log_level.upper())
@@ -34,9 +34,8 @@ async def lifespan(app: FastAPI):
     global scaler, model, FEATURE_NAMES, MODEL_META
     try:
         if MODEL_PATH.exists():
-            LOG.info(f"Loading model from {MODEL_PATH}")
-            with MODEL_PATH.open("rb") as f:
-                payload = pickle.load(f)
+            LOG.info("Loading model from %s", MODEL_PATH)
+            payload = load_model(MODEL_PATH)
             scaler = payload.get("scaler")
             model = payload.get("model")
             FEATURE_NAMES = payload.get("feature_names")
