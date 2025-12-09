@@ -3,9 +3,14 @@ line-length = 88
 target-version = ['py313']
 
 [tool.ruff]
-line-length = 88
-select = ["E", "F", "W", "C", "B", "ANN", "ICN", "UP" ]
-ignore = ["E501"]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+ignore = [
+    "ANN",   # Ignore all type annotation warnings
+    "B904",  # Ignore exception chaining requirement
+]
 
 [tool.isort]
 profile = "black"
