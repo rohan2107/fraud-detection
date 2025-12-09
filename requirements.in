@@ -1,3 +1,4 @@
+ # pip-compile --no-strip-extras
 fastapi
 scikit-learn
 pandas

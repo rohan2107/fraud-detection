@@ -1,3 +1,4 @@
+ # pip-compile --no-strip-extras
 black
 ruff
 pytest
