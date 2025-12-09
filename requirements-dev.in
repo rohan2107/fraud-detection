@@ -4,3 +4,4 @@ ruff
 pytest
 pip-tools
 colorama
+httpx
