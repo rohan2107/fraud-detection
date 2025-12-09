@@ -12,8 +12,8 @@ install-dev:
 	$(PYTHON) -m piptools sync requirements.txt requirements-dev.txt
 
 lock-deps:
-	pip-compile --no-strip-extras -o requirements.txt requirements.in
-	pip-compile --no-strip-extras -o requirements-dev.txt requirements-dev.in
+	pip-compile --strip-extras -o requirements.txt requirements.in
+	pip-compile --strip-extras -o requirements-dev.txt requirements-dev.in
 
 lint:
 	ruff check .
