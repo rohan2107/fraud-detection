@@ -1,4 +1,3 @@
-import os
 import sys
 import subprocess
 import pickle
@@ -21,29 +20,29 @@ arr[:2, -1] = 1
 df = pd.DataFrame(arr, columns=cols)
 df.to_csv(CSV_PATH, index=False)
 
-print('Running training subprocess...')
+print("Running training subprocess...")
 subprocess.run([sys.executable, "src/train_model.py"], check=True, cwd=ROOT)
-print('Subprocess done. PKL exists?', PKL_PATH.exists())
+print("Subprocess done. PKL exists?", PKL_PATH.exists())
 
-with PKL_PATH.open('rb') as f:
+with PKL_PATH.open("rb") as f:
     payload = pickle.load(f)
 
-print('Payload type:', type(payload))
+print("Payload type:", type(payload))
 if isinstance(payload, dict):
-    scaler = payload.get('scaler')
-    model = payload.get('model')
+    scaler = payload.get("scaler")
+    model = payload.get("model")
 else:
     scaler, model = payload
 
-print('scaler type:', type(scaler))
-print('scaler class module:', getattr(scaler.__class__, '__module__', None))
-print('model type:', type(model))
-print('model class module:', getattr(model.__class__, '__module__', None))
+print("scaler type:", type(scaler))
+print("scaler class module:", getattr(scaler.__class__, "__module__", None))
+print("model type:", type(model))
+print("model class module:", getattr(model.__class__, "__module__", None))
 
 # cleanup
 if PKL_PATH.exists():
-    print('Removing PKL')
+    print("Removing PKL")
     PKL_PATH.unlink()
 if CSV_PATH.exists():
     CSV_PATH.unlink()
-print('Done')
+print("Done")
