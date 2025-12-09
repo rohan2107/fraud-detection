@@ -1,8 +1,14 @@
-# train_model.py
-import pickle
+"""Train and persist a fraud detection model.
+
+This module now exposes a `main()` function and only runs when executed
+as a script. It uses `logging` instead of printing directly so it is
+friendlier to CI and importers.
+"""
 import sys
 from pathlib import Path
+import logging
 
+import joblib
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import f1_score, precision_score, recall_score
@@ -15,48 +21,62 @@ if str(ROOT) not in sys.path:
 
 from src.config import settings  # noqa: E402
 
-df = pd.read_csv(settings.data_path)
 
-# Features (all except Class)
-X = df.drop(columns=["Class"])
-y = df["Class"]
+def main() -> None:
+    logging.basicConfig(level=logging.INFO)
 
-# Save feature names so inference uses exact ordering
-feature_names = list(X.columns)
+    # Validate data file exists
+    if not settings.data_path.exists():
+        raise FileNotFoundError(
+            f"Data file not found: {settings.data_path}. "
+            f"Please ensure the dataset exists at this path."
+        )
 
-# Train/test split to get a quick evaluation (we treat '1' as fraud)
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
+    df = pd.read_csv(settings.data_path)
 
-# Normalize
-scaler = StandardScaler().fit(X_train)
-X_train_s = scaler.transform(X_train)
-X_test_s = scaler.transform(X_test)
+    # Features (all except Class)
+    X = df.drop(columns=["Class"])
+    y = df["Class"]
 
-# Train IsolationForest on normal transactions only (or on full as one strategy)
-model = IsolationForest(contamination=0.01, random_state=42).fit(X_train_s)
+    # Save feature names so inference uses exact ordering
+    feature_names = list(X.columns)
 
-# Predict on test set (IsolationForest: -1 anomaly, 1 normal)
-pred_test = model.predict(X_test_s)
-# convert to label space used by dataset: model -1 -> predicted fraud (1); model 1 -> predicted not fraud (0)
-pred_labels = (pred_test == -1).astype(int)
+    # Train/test split to get a quick evaluation (we treat '1' as fraud)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
 
-precision = precision_score(y_test, pred_labels, zero_division=0)
-recall = recall_score(y_test, pred_labels, zero_division=0)
-f1 = f1_score(y_test, pred_labels, zero_division=0)
+    # Normalize
+    scaler = StandardScaler().fit(X_train)
+    X_train_s = scaler.transform(X_train)
+    X_test_s = scaler.transform(X_test)
 
-meta = {"precision": float(precision), "recall": float(recall), "f1": float(f1)}
+    # Train IsolationForest on normal transactions only (or on full as one strategy)
+    model = IsolationForest(contamination=0.01, random_state=42).fit(X_train_s)
 
-# Save everything
-payload = {
-    "scaler": scaler,
-    "model": model,
-    "feature_names": feature_names,
-    "meta": meta,
-}
-with Path(settings.model_path).open("wb") as f:
-    pickle.dump(payload, f)
+    # Predict on test set (IsolationForest: -1 anomaly, 1 normal)
+    pred_test = model.predict(X_test_s)
+    # convert to label space used by dataset: model -1 -> predicted fraud (1); model 1 -> predicted not fraud (0)
+    pred_labels = (pred_test == -1).astype(int)
 
-print(f"Model trained and saved to {Path(settings.model_path)}")
-print("Eval metrics:", meta)
+    precision = precision_score(y_test, pred_labels, zero_division=0)
+    recall = recall_score(y_test, pred_labels, zero_division=0)
+    f1 = f1_score(y_test, pred_labels, zero_division=0)
+
+    meta = {"precision": float(precision), "recall": float(recall), "f1": float(f1)}
+
+    # Save everything using joblib (safer than pickle)
+    payload = {
+        "scaler": scaler,
+        "model": model,
+        "feature_names": feature_names,
+        "meta": meta,
+    }
+    joblib.dump(payload, Path(settings.model_path))
+
+    logging.info("Model trained and saved to %s", Path(settings.model_path))
+    logging.info("Eval metrics: %s", meta)
+
+
+if __name__ == "__main__":
+    main()
