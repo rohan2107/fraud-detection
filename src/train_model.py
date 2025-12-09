@@ -30,8 +30,7 @@ def main() -> None:
     # Validate data file exists
     if not settings.data_path.exists():
         raise FileNotFoundError(
-            f"Data file not found: {settings.data_path}. "
-            f"Please ensure the dataset exists at this path."
+            f"Data file not found: {settings.data_path}. " f"Please ensure the dataset exists at this path."
         )
 
     df = pd.read_csv(settings.data_path)
@@ -44,9 +43,7 @@ def main() -> None:
     feature_names = list(X.columns)
 
     # Train/test split to get a quick evaluation (we treat '1' as fraud)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
     # Normalize
     scaler = StandardScaler().fit(X_train)

@@ -48,9 +48,7 @@ async def lifespan(app: FastAPI):
             MODEL_META = payload.get("meta", {})
             LOG.info("Model loaded successfully.")
         else:
-            LOG.warning(
-                f"{MODEL_PATH} not found — API will start without a model. Add the pickle to enable /predict."
-            )
+            LOG.warning(f"{MODEL_PATH} not found — API will start without a model. Add the pickle to enable /predict.")
     except Exception as exc:  # keep startup resilient but log error
         LOG.exception("Failed to load model at startup: %s", exc)
     yield
