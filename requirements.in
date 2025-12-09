@@ -5,3 +5,4 @@ pydantic-settings
 joblib
 uvicorn
 python-dotenv
+colorama
