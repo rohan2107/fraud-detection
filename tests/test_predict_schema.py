@@ -7,14 +7,17 @@ from src.main import app
 
 BASE_DIR = Path(__file__).parent / "samples"
 
+
 @pytest.fixture
 def client():
     with TestClient(app) as c:
         yield c
 
+
 def load_sample(name: str):
     with open(BASE_DIR / f"{name}.json") as f:
         return json.load(f)
+
 
 def test_predict_schema(client):
     payload = load_sample("sample_normal")

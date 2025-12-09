@@ -11,6 +11,7 @@ DATA_DIR = ROOT / "data"
 CSV_PATH = DATA_DIR / "creditcard.csv"
 PKL_PATH = ROOT / "fraud_model.pkl"
 
+
 def make_small_csv():
     DATA_DIR.mkdir(exist_ok=True)
     # columns: Time, V1..V28, Amount, Class
@@ -23,6 +24,7 @@ def make_small_csv():
     arr[:2, -1] = 1  # two fraud labels
     df = pd.DataFrame(arr, columns=cols)
     df.to_csv(CSV_PATH, index=False)
+
 
 def test_train_creates_pickle_and_contents():
     # cleanup from earlier runs if present

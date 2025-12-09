@@ -7,9 +7,11 @@ from src.main import app
 
 BASE_DIR = Path(__file__).parent / "samples"
 
+
 def load_sample(name: str):
     with open(BASE_DIR / f"{name}.json") as f:
         return json.load(f)
+
 
 @pytest.fixture
 def client():
@@ -18,15 +20,18 @@ def client():
     with TestClient(app) as c:
         yield c
 
+
 def test_health(client):
     r = client.get("/")
     assert r.status_code == 200
+
 
 def test_predict_normal(client):
     payload = load_sample("sample_normal")
     r = client.post("/predict", json=payload)
     assert r.status_code == 200
     assert "prediction" in r.json()
+
 
 def test_predict_fraud(client):
     payload = load_sample("sample_fraud")

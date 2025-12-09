@@ -16,6 +16,18 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+Optional: install dev tools (ruff, black) and use the helper make targets:
+```bash
+pip install -r requirements-dev.txt
+make lint
+make test
+```
+
+Environment variables (see `env.example`):
+- `FRAUD_MODEL_PATH` (default: `fraud_model.pkl`)
+- `DATA_PATH` (default: `data/creditcard.csv`)
+- `LOG_LEVEL` (default: `INFO`)
+
 # Train the model (requires data/creditcard.csv):
 ```bash
 python src/train_model.py
@@ -28,6 +40,14 @@ and place creditcard.csv inside the data/ folder.
 ```bash
 uvicorn src.main:app --reload --port 8000
 ```
+
+## Run with Docker
+Build and run the API locally:
+```bash
+docker build -t fraud-api .
+docker run --rm -p 8000:8000 --env-file env.example fraud-api
+```
+The container expects `fraud_model.pkl` to exist at the repo root when building (or mount one at runtime with `-v $(pwd)/fraud_model.pkl:/app/fraud_model.pkl`).
 
 ## Usage
 Example request (using included sample JSONs):

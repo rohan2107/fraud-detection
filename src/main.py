@@ -1,28 +1,29 @@
 # src/main.py
-import pickle
-import pathlib
 import logging
-from typing import Optional
+import pickle
 from contextlib import asynccontextmanager
-import os
+from typing import Optional
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+from .config import settings
 
 LOG = logging.getLogger("fraud-api")
-LOG.setLevel(logging.INFO)
+LOG.setLevel(settings.log_level.upper())
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
 LOG.addHandler(handler)
 
-MODEL_PATH = pathlib.Path(os.getenv("FRAUD_MODEL_PATH", "fraud_model.pkl"))
+MODEL_PATH = settings.model_path
 
 # global model objects (populated during lifespan startup)
 scaler = None
 model = None
 FEATURE_NAMES: Optional[list] = None
 MODEL_META: dict = {}
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,14 +43,18 @@ async def lifespan(app: FastAPI):
             MODEL_META = payload.get("meta", {})
             LOG.info("Model loaded successfully.")
         else:
-            LOG.warning(f"{MODEL_PATH} not found — API will start without a model. Add the pickle to enable /predict.")
+            LOG.warning(
+                f"{MODEL_PATH} not found — API will start without a model. Add the pickle to enable /predict."
+            )
     except Exception as exc:  # keep startup resilient but log error
         LOG.exception("Failed to load model at startup: %s", exc)
     yield
     # optional: any shutdown cleanup here
     LOG.info("Shutting down app.")
 
+
 app = FastAPI(title="Fraud Detection API", lifespan=lifespan)
+
 
 # --- Pydantic model using CSV-style names as aliases ---
 class Transaction(BaseModel):
@@ -93,8 +98,9 @@ def home():
     return {
         "message": "Fraud Detection API is running!",
         "model_loaded": model is not None,
-        "model_meta_available": bool(MODEL_META)
+        "model_meta_available": bool(MODEL_META),
     }
+
 
 @app.get("/metrics")
 def metrics():

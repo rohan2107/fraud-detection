@@ -3,10 +3,12 @@ from fastapi.testclient import TestClient
 from src.main import app
 import pytest
 
+
 @pytest.fixture
 def client():
     with TestClient(app) as c:
         yield c
+
 
 def test_metrics(client):
     r = client.get("/metrics")

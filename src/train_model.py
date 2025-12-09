@@ -1,12 +1,21 @@
 # train_model.py
-import pandas as pd
 import pickle
-from sklearn.ensemble import IsolationForest
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import precision_score, recall_score, f1_score
+import sys
+from pathlib import Path
 
-df = pd.read_csv("data/creditcard.csv")
+import pandas as pd
+from sklearn.ensemble import IsolationForest
+from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from src.config import settings  # noqa: E402
+
+df = pd.read_csv(settings.data_path)
 
 # Features (all except Class)
 X = df.drop(columns=["Class"])
@@ -16,7 +25,9 @@ y = df["Class"]
 feature_names = list(X.columns)
 
 # Train/test split to get a quick evaluation (we treat '1' as fraud)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
 
 # Normalize
 scaler = StandardScaler().fit(X_train)
@@ -38,9 +49,14 @@ f1 = f1_score(y_test, pred_labels, zero_division=0)
 meta = {"precision": float(precision), "recall": float(recall), "f1": float(f1)}
 
 # Save everything
-payload = {"scaler": scaler, "model": model, "feature_names": feature_names, "meta": meta}
-with open("fraud_model.pkl", "wb") as f:
+payload = {
+    "scaler": scaler,
+    "model": model,
+    "feature_names": feature_names,
+    "meta": meta,
+}
+with Path(settings.model_path).open("wb") as f:
     pickle.dump(payload, f)
 
-print("Model trained and saved as fraud_model.pkl")
+print(f"Model trained and saved to {Path(settings.model_path)}")
 print("Eval metrics:", meta)
