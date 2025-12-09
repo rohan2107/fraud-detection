@@ -4,11 +4,12 @@ This module now exposes a `main()` function and only runs when executed
 as a script. It uses `logging` instead of printing directly so it is
 friendlier to CI and importers.
 """
+
 import sys
 from pathlib import Path
 import logging
 
-import joblib
+import pickle
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import f1_score, precision_score, recall_score
@@ -65,14 +66,15 @@ def main() -> None:
 
     meta = {"precision": float(precision), "recall": float(recall), "f1": float(f1)}
 
-    # Save everything using joblib (safer than pickle)
+    # Save everything using pickle so tests using `pickle.load` can read it
     payload = {
         "scaler": scaler,
         "model": model,
         "feature_names": feature_names,
         "meta": meta,
     }
-    joblib.dump(payload, Path(settings.model_path))
+    with open(Path(settings.model_path), "wb") as fh:
+        pickle.dump(payload, fh, protocol=pickle.HIGHEST_PROTOCOL)
 
     logging.info("Model trained and saved to %s", Path(settings.model_path))
     logging.info("Eval metrics: %s", meta)
