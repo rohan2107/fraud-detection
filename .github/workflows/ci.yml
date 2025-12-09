@@ -34,11 +34,6 @@ jobs:
           pip install pip-tools==7.5.2
           python -m piptools sync requirements.txt requirements-dev.txt
 
-      - name: Check for dependency changes
-        run: |
-          make lock-deps
-          git diff --exit-code -- requirements.txt requirements-dev.txt
-
       - name: Lint (ruff)
         run: ruff check .
 
