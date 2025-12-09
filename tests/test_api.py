@@ -30,11 +30,13 @@ def test_predict_normal(client):
     payload = load_sample("sample_normal")
     r = client.post("/predict", json=payload)
     assert r.status_code == 200
-    assert "prediction" in r.json()
+    body = r.json()
+    assert body.get("prediction") == "Not Fraud"
 
 
 def test_predict_fraud(client):
     payload = load_sample("sample_fraud")
     r = client.post("/predict", json=payload)
     assert r.status_code == 200
-    assert "prediction" in r.json()
+    body = r.json()
+    assert body.get("prediction") == "Fraud"

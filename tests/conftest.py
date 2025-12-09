@@ -22,7 +22,7 @@ def _write_synthetic_model():
     df = pd.DataFrame(rng.normal(size=(200, len(FEATURE_NAMES))), columns=FEATURE_NAMES)
     scaler = StandardScaler().fit(df)
     Xs = scaler.transform(df)
-    model = IsolationForest(contamination=0.01, random_state=42).fit(Xs)
+    model = IsolationForest(contamination=0.1, random_state=42).fit(Xs)
     payload = {
         "scaler": scaler,
         "model": model,

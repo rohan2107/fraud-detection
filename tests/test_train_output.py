@@ -42,16 +42,18 @@ def test_train_creates_pickle_and_contents():
 
         payload = joblib.load(PKL_PATH)
 
-        # payload could be either a tuple (scaler, model) or dict depending on your train_model implementation.
-        # Support both patterns for compatibility:
-        if isinstance(payload, tuple):
-            scaler, model = payload
-            assert scaler is not None
-            assert model is not None
-        elif isinstance(payload, dict):
-            assert "scaler" in payload and "model" in payload
-        else:
-            raise AssertionError("Unexpected payload format in fraud_model.pkl")
+        assert isinstance(payload, dict)
+        assert "scaler" in payload and "model" in payload and "meta" in payload
+
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.ensemble import IsolationForest
+
+        assert isinstance(payload["scaler"], StandardScaler)
+        assert isinstance(payload["model"], IsolationForest)
+        assert "precision" in payload["meta"]
+        assert "recall" in payload["meta"]
+        assert "f1" in payload["meta"]
+
     finally:
         # cleanup
         if PKL_PATH.exists():

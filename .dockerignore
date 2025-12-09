@@ -1,0 +1,19 @@
+# Docker and git
+.git
+.gitignore
+.dockerignore
+
+# Python
+.venv
+.venv_test
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+
+# Project files
+README.md
+Makefile
+*.pkl
+data/
+env.example

@@ -16,3 +16,7 @@ def test_metrics(client):
     assert r.status_code == 200
     body = r.json()
     assert "model_meta" in body
+    # The synthetic model in conftest has a 'note', not metrics.
+    # The model from the training script will have precision, recall, f1.
+    # This test runs against the conftest model.
+    assert "note" in body["model_meta"]

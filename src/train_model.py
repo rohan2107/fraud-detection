@@ -53,8 +53,10 @@ def main() -> None:
     X_train_s = scaler.transform(X_train)
     X_test_s = scaler.transform(X_test)
 
-    # Train IsolationForest on normal transactions only (or on full as one strategy)
-    model = IsolationForest(contamination=0.01, random_state=42).fit(X_train_s)
+    # Train IsolationForest on normal transactions only
+    # The 'contamination' parameter is still used at prediction time to define the threshold.
+    X_train_normal = X_train_s[y_train == 0]
+    model = IsolationForest(contamination=0.01, random_state=42).fit(X_train_normal)
 
     # Predict on test set (IsolationForest: -1 anomaly, 1 normal)
     pred_test = model.predict(X_test_s)

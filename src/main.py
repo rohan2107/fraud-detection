@@ -32,6 +32,12 @@ async def lifespan(app: FastAPI):
     Loads model if available; does not crash the app if missing.
     """
     global scaler, model, FEATURE_NAMES, MODEL_META
+    # Reset state on each startup, essential for testing
+    scaler = None
+    model = None
+    FEATURE_NAMES = None
+    MODEL_META = {}
+
     try:
         if MODEL_PATH.exists():
             LOG.info("Loading model from %s", MODEL_PATH)
@@ -140,6 +146,8 @@ def predict(transaction: Transaction):
 
     try:
         prediction = model.predict(transaction_scaled)
+        # Lower score means more abnormal
+        anomaly_score = model.decision_function(transaction_scaled)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Model prediction failed: {e}")
 
@@ -148,5 +156,6 @@ def predict(transaction: Transaction):
     return {
         "prediction": "Fraud" if is_fraud else "Not Fraud",
         "raw_prediction": int(prediction[0]),
+        "anomaly_score": float(anomaly_score[0]),
         "model_meta": MODEL_META,
     }
